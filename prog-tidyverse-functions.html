@@ -440,13 +440,75 @@ summary {
 <p>To determine whether a function argument uses data masking or tidy selection, look at the documentation: in the arguments list, you’ll see <code>&lt;data-masking&gt;</code> or <code>&lt;tidy-select&gt;</code>.</p>
 <p>Data masking and tidy selection make interactive data exploration fast and fluid, but they add some new challenges when you attempt to use them indirectly such as in a for loop or a function. This vignette shows you how to overcome those challenges. We’ll first go over the basics of data masking and tidy selection, talk about how to use them indirectly, and then show you a number of recipes to solve common problems.</p>
 <p>This vignette will give you the minimum knowledge you need to be an effective programmer with tidy evaluation. If you’d like to learn more about the underlying theory, or precisely how it’s different from non-standard evaluation, we recommend that you read the Metaprogramming chapters in <a href="https://adv-r.hadley.nz"><em>Advanced R</em></a>.</p>
+<div id="setup-for-today" class="section level3">
+<h3>Setup for today</h3>
 <p>Before we get started, let’s load the tidyverse packages:</p>
 <pre class="r"><code>library(tidyverse)</code></pre>
 </div>
+<div id="reminder-functions-in-r" class="section level3">
+<h3>Reminder: Functions in R</h3>
+<p>And then remind ourselves, what a function looks like in R!</p>
+<p>In R, we define and name a function via: <code>variable &lt;- function(…arguments…) { …body… }</code></p>
+<p>For example we can define a function named <code>add</code> that adds two numbers together:</p>
+<pre class="r"><code>add &lt;- function(x, y) {
+  x + y
+}</code></pre>
+<p>Since the function is named, we can then call it by name and pass it arguments:</p>
+<pre class="r"><code>add(5, 10)</code></pre>
+<pre><code>## [1] 15</code></pre>
+<p>This was a simple function, and seems a bit unneeded. Which it is! What would a function look like that we might need in our data analysis? Perhaps something like this:</p>
+<pre class="r"><code>group_means &lt;- function(data, grouping_column, column_to_summarize) {
+  data %&gt;% 
+    group_by(grouping_column) %&gt;% 
+    summarise(column_mean = mean(column_to_summarize))
+}</code></pre>
+<p>Would that function work? Could we use it to get the mean height for the different species in the <code>starwars</code> data frame?</p>
+<pre class="r"><code>starwars</code></pre>
+<pre><code>## # A tibble: 87 x 14
+##    name  height  mass hair_color skin_color eye_color birth_year sex   gender
+##    &lt;chr&gt;  &lt;int&gt; &lt;dbl&gt; &lt;chr&gt;      &lt;chr&gt;      &lt;chr&gt;          &lt;dbl&gt; &lt;chr&gt; &lt;chr&gt; 
+##  1 Luke…    172    77 blond      fair       blue            19   male  mascu…
+##  2 C-3PO    167    75 &lt;NA&gt;       gold       yellow         112   none  mascu…
+##  3 R2-D2     96    32 &lt;NA&gt;       white, bl… red             33   none  mascu…
+##  4 Dart…    202   136 none       white      yellow          41.9 male  mascu…
+##  5 Leia…    150    49 brown      light      brown           19   fema… femin…
+##  6 Owen…    178   120 brown, gr… light      blue            52   male  mascu…
+##  7 Beru…    165    75 brown      light      blue            47   fema… femin…
+##  8 R5-D4     97    32 &lt;NA&gt;       white, red red             NA   none  mascu…
+##  9 Bigg…    183    84 black      light      brown           24   male  mascu…
+## 10 Obi-…    182    77 auburn, w… fair       blue-gray       57   male  mascu…
+## # … with 77 more rows, and 5 more variables: homeworld &lt;chr&gt;, species &lt;chr&gt;,
+## #   films &lt;list&gt;, vehicles &lt;list&gt;, starships &lt;list&gt;</code></pre>
+<p>First, how we would do this without our function:</p>
+<pre class="r"><code>starwars %&gt;% 
+  group_by(species) %&gt;% 
+  summarise(column_mean = mean(height))</code></pre>
+<pre><code>## `summarise()` ungrouping output (override with `.groups` argument)</code></pre>
+<pre><code>## # A tibble: 38 x 2
+##    species   column_mean
+##    &lt;chr&gt;           &lt;dbl&gt;
+##  1 Aleena            79 
+##  2 Besalisk         198 
+##  3 Cerean           198 
+##  4 Chagrian         196 
+##  5 Clawdite         168 
+##  6 Droid             NA 
+##  7 Dug              112 
+##  8 Ewok              88 
+##  9 Geonosian        183 
+## 10 Gungan           209.
+## # … with 28 more rows</code></pre>
+<p>Next we’ll try our function:</p>
+<pre class="r"><code>group_means(starwars, species, height)</code></pre>
+<pre><code>## Error: Must group by variables found in `.data`.
+## * Column `grouping_column` is not found.</code></pre>
+<p>It turns out no! Why not? The unquoted column names trip R up here! Let’s learn more about why, and then what we can do to handle this!</p>
+</div>
+</div>
 <div id="data-masking" class="section level2">
 <h2>Data masking</h2>
-<p>Data masking makes data manipulation faster because it requires less typing. In most (but not all<a href="#fn1" class="footnote-ref" id="fnref1"><sup>1</sup></a>) base R functions you need to refer to variables with <code>$</code>, leading to code that repeats the name of the data frame many times:</p>
-<pre class="r"><code>starwars[starwars$homeworld == &quot;Naboo&quot; &amp; starwars$species == &quot;Human&quot;, ,]</code></pre>
+<p>Data masking makes data manipulation faster because it requires less typing. In most (but not all) base R functions you need to refer to variables with <code>$</code>, leading to code that repeats the name of the data frame many times:</p>
+<pre class="r"><code>starwars[starwars$homeworld == &quot;Naboo&quot; &amp; starwars$species == &quot;Human&quot;, ]</code></pre>
 <p>The dplyr equivalent of this code is more concise because data masking allows you to need to type <code>starwars</code> once:</p>
 <pre class="r"><code>starwars %&gt;% filter(homeworld == &quot;Naboo&quot;, species == &quot;Human&quot;)</code></pre>
 <div id="data--and-env-variables" class="section level3">
@@ -459,7 +521,7 @@ summary {
 <p>To make those definitions a little more concrete, take this piece of code:</p>
 <pre class="r"><code>df &lt;- data.frame(x = runif(3), y = runif(3))
 df$x</code></pre>
-<pre><code>## [1] 0.1429186 0.9385617 0.2511186</code></pre>
+<pre><code>## [1] 0.61259006 0.01848096 0.82845609</code></pre>
 <p>It creates a env-variable, <code>df</code>, that contains two data-variables, <code>x</code> and <code>y</code>. Then it extracts the data-variable <code>x</code> out of the env-variable <code>df</code> using <code>$</code>.</p>
 <p>I think this blurring of the meaning of “variable” is a really nice feature for interactive data analysis because it allows you to refer to data-vars as is, without any prefix. And this seems to be fairly intuitive since many newer R users will attempt to write <code>diamonds[x == 0 | y == 0, ]</code>.</p>
 <p>Unfortunately, this benefit does not come for free. When you start to program with these tools, you’re going to have to grapple with the distinction. This will be hard because you’ve never had to think about it before, so it’ll take a while for your brain to learn these new concepts and categories. However, once you’ve teased apart the idea of “variable” into data-variable and env-variable, I think you’ll find it fairly straightforward to use.</p>
@@ -468,8 +530,9 @@ df$x</code></pre>
 <h3>Indirection</h3>
 <p>The main challenge of programming with functions that use data masking arises when you introduce some indirection, i.e. when you want to get the data-variable from an env-variable instead of directly typing the data-variable’s name. There are two main cases:</p>
 <ul>
-<li><p>When you have the data-variable in a function argument (i.e. an env-variable that holds a promise<a href="#fn2" class="footnote-ref" id="fnref2"><sup>2</sup></a>), you need to <strong>embrace</strong> the argument by surrounding it in doubled braces, like <code>filter(df, {{ var }})</code>.</p>
-<p>The following function uses embracing to create a wrapper around <code>summarise()</code> that computes the minimum and maximum values of a variable, as well as the number of observations that were summarised:</p>
+<li><p>When you have the data-variable in a function argument (i.e. an env-variable that holds a promise<a href="#fn1" class="footnote-ref" id="fnref1"><sup>1</sup></a>), you need to <strong>embrace</strong> the argument by surrounding it in doubled braces, like <code>filter(df, {{ var }})</code>.</p>
+<p>The following function uses embracing to create a wrapper around <code>summarise()</code> that computes the minimum and maximum values of a variable, as well as the number of observations that were summarised:</p></li>
+</ul>
 <pre class="r"><code>var_summary &lt;- function(data, var) {
   data %&gt;%
     summarise(n = n(), min = min({{ var }}), max = max({{ var }}))
@@ -477,7 +540,8 @@ df$x</code></pre>
 mtcars %&gt;% 
   group_by(cyl) %&gt;% 
   var_summary(mpg)</code></pre>
-<pre><code>## `summarise()` ungrouping output (override with `.groups` argument)</code></pre></li>
+<pre><code>## `summarise()` ungrouping output (override with `.groups` argument)</code></pre>
+<ul>
 <li><p>When you have an env-variable that is a character vector, you need to index into the <code>.data</code> pronoun with <code>[[</code>, like <code>summarise(df, mean = mean(.data[[var]]))</code>.</p>
 <p>The following example uses <code>.data</code> to count the number of unique values in each variable of <code>mtcars</code>:</p>
 <pre class="r"><code>for (var in names(mtcars)) {
@@ -485,6 +549,31 @@ mtcars %&gt;%
 }</code></pre>
 <p>Note that <code>.data</code> is not a data frame; it’s a special construct, a pronoun, that allows you to access the current variables either directly, with <code>.data$x</code> or indirectly with <code>.data[[var]]</code>. Don’t expect other functions to work with it.</p></li>
 </ul>
+</div>
+<div id="solving-our-problem-from-the-beginning" class="section level3">
+<h3>Solving our problem from the beginning</h3>
+<p>Can we use what we learned now to fix our function from earlier? Yes! We need to add the <code>{{</code> operator around the unquoted column name data variables in our function:</p>
+<pre class="r"><code>group_means &lt;- function(data, grouping_column, column_to_summarize) {
+  data %&gt;% 
+    group_by({{ grouping_column }}) %&gt;% 
+    summarise(column_mean = mean({{ column_to_summarize}}))
+}</code></pre>
+<pre class="r"><code>group_means(starwars, species, height)</code></pre>
+<pre><code>## `summarise()` ungrouping output (override with `.groups` argument)</code></pre>
+<pre><code>## # A tibble: 38 x 2
+##    species   column_mean
+##    &lt;chr&gt;           &lt;dbl&gt;
+##  1 Aleena            79 
+##  2 Besalisk         198 
+##  3 Cerean           198 
+##  4 Chagrian         196 
+##  5 Clawdite         168 
+##  6 Droid             NA 
+##  7 Dug              112 
+##  8 Ewok              88 
+##  9 Geonosian        183 
+## 10 Gungan           209.
+## # … with 28 more rows</code></pre>
 </div>
 </div>
 <div id="tidy-selection" class="section level2">
@@ -525,8 +614,7 @@ mtcars %&gt;% select(!all_of(vars))</code></pre></li>
 <div class="footnotes">
 <hr />
 <ol>
-<li id="fn1"><p>dplyr’s <code>filter()</code> is inspired by base R’s <code>subset()</code>. <code>subset()</code> provides data masking, but not with tidy evaluation, so the techniques described in this chapter don’t apply to it.<a href="#fnref1" class="footnote-back">↩︎</a></p></li>
-<li id="fn2"><p>In R, arguments are lazily evaluated which means that until you attempt to use, they don’t hold a value, just a <strong>promise</strong> that describes how to compute the value. You can learn more at <a href="https://adv-r.hadley.nz/functions.html#lazy-evaluation" class="uri">https://adv-r.hadley.nz/functions.html#lazy-evaluation</a><a href="#fnref2" class="footnote-back">↩︎</a></p></li>
+<li id="fn1"><p>In R, arguments are lazily evaluated which means that until you attempt to use, they don’t hold a value, just a <strong>promise</strong> that describes how to compute the value. You can learn more at <a href="https://adv-r.hadley.nz/functions.html#lazy-evaluation" class="uri">https://adv-r.hadley.nz/functions.html#lazy-evaluation</a><a href="#fnref1" class="footnote-back">↩︎</a></p></li>
 </ol>
 </div>
 
