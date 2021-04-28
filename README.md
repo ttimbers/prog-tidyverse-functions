@@ -1,24 +1,23 @@
-# Introduction to {reticulate}
-- Workshop for R Ladies Baltimore ([video](https://www.youtube.com/watch?v=U3ByGh8RmSc))
+# Programming with {tidyverse} functions
+- Workshop for R Ladies Vancouver
 - Author: [Tiffany Timbers](https://www.tiffanytimbers.com/)
-- Date: 2020-12-16
+- Date: 2021-04-28
 
-Reticulate RStudio and your R code with Python! In this short work-shop we will show you how to configure your system so that you can use Python inside RStudio 
-at the repl/console, in a script and inside R Markdown. As well as how to bring Python packages and functions into your R code! To do this we will be relying on the {[reticulate](https://rstudio.github.io/reticulate/)} R package.
+{Tidyverse} functions were designed for their ease of use by humans, and are best known and used in interactive R coding, or as part of a literate code document (e.g., R Markdown) or script, where they are run in the global environment (i.e., not inside a function). Here they feel easy to use and powerful, as you can access things like column names as if they were available to you as objects themselves. However, this ease of use by humans is a trade off for “more work required” when you want to start programming with these. For example, when using them inside functions. In this short workshop, we will introduce what makes programming with {Tidyverse} functions challenging and how we can rise up to meet these challenges.
+
+> This workshop assumes you have used 2-3 Tidyverse functions and know how to write a function in R.
 
 ## Pre-workshop instructions
 
-We will do some setup collectively at the workshop, however, some aspects of setting this up can take some time, so we ask you to do them ahead of time. Please click on the link below for your computer's operating system. If you think this messes with how you have setup your system, feel free to just install the parts you are missing, or just watch the workshop and then later try to setup reticulate on top of your system's setup.
+Before the workshop, please have R and RStudio installed on your computer, as well as the {tidyverse} meta-package. Installing the {tidyverse} meta-package must be done after installing R & RStudio, and is done by opening RStudio and from the console run: `install.packages("tidyverse")`
 
-- [Windows](setup-instructions/windows_install_python.md)
-- [Mac OS](setup-instructions/macos_install_python.md)
-- [Ubuntu](setup-instructions/ubuntu_install_python.md)
+For help see:
+
+- [How to install R & RStudio](https://moderndive.netlify.app/1-getting-started.html#installing)
+- [RLadies Sydney notes on installing R packages](https://rladiessydney.org/courses/ryouwithme/01-basicbasics-2/)
 
 ## During the workshop
 
-We will talk through these slides: [slides](slides/reticulate-intro.pdf)
+We will talk through this RMarkdown document: [prog-tidyverse-functions.Rmd](prog-tidyverse-functions.Rmd)
 
-And then talk/walk through these remaining setup instructions: [setup-instructions/setup-after-installing-python.md](setup-after-installing-python.md)
-
-And then finally, we will start [here](python_rmd_empty.Rmd) in an skeleton 
-R Markdown document and work towards creating this as a final product: [python_rmd.Rmd](python_rmd.Rmd) (which renders to [python_rmd.md](python_rmd.md)).
+And if you want more practice after, try this worksheet out later: [prog-tidyverse-worksheet.Rmd](prog-tidyverse-worksheet.Rmd)
