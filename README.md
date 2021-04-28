@@ -20,6 +20,9 @@ For help see:
 
 We will talk and walk through [this RMarkdown document](prog-tidyverse-functions.html) (see source here: [prog-tidyverse-functions.Rmd](prog-tidyverse-functions.Rmd)).
 
+## After the workshop
 And if you want more practice after, try this worksheet out: [worksheet/prog-tidyverse-worksheet.Rmd](worksheet/prog-tidyverse-worksheet.Rmd)
 
-**To easily download this GitHub repository as a `.zip`, click [here](https://github.com/ttimbers/prog-tidyverse-functions/archive/refs/heads/main.zip).**
+## Get the materials locally
+
+**To easily download this GitHub repository as a `.zip`, click [here](https://github.com/ttimbers/prog-tidyverse-functions/archive/refs/heads/main.zip), or use Git to clone this repository.*
