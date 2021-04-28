@@ -17,9 +17,9 @@ knitr::opts_chunk$set(echo = TRUE)
 > Hadley Wickham, Romain François, Lionel Henry, Kirill Müller, and
 > RStudio.
 
-Most dplyr verbs use **tidy evaluation** in some way. Tidy evaluation is
-a special type of non-standard evaluation used throughout the tidyverse.
-There are two basic forms found in dplyr:
+Most ~~dplyr~~ {tidyverse} verbs use **tidy evaluation** in some way.
+Tidy evaluation is a special type of non-standard evaluation used
+throughout the {tidyverse}. There are two basic forms:
 
 -   `arrange()`, `count()`, `filter()`, `group_by()`, `mutate()`, and
     `summarise()` use **data masking** so that you can use data
@@ -32,20 +32,25 @@ There are two basic forms found in dplyr:
 
 To determine whether a function argument uses data masking or tidy
 selection, look at the documentation: in the arguments list, you'll see
-`<data-masking>` or `<tidy-select>`.
+`<data-masking>` or `<tidy-select>`. Let's look at a few now!
+
+```{r}
+?arrange
+```
+
+```{r}
+?rename
+```
 
 Data masking and tidy selection make interactive data exploration fast
 and fluid, but they add some new challenges when you attempt to use them
-indirectly such as in a for loop or a function. This vignette shows you
-how to overcome those challenges. We'll first go over the basics of data
-masking and tidy selection, talk about how to use them indirectly, and
-then show you a number of recipes to solve common problems.
+indirectly such as in a for loop or a function. This talk will show you
+how to overcome those challenges.
 
-This vignette will give you the minimum knowledge you need to be an
-effective programmer with tidy evaluation. If you'd like to learn more
-about the underlying theory, or precisely how it's different from
-non-standard evaluation, we recommend that you read the Metaprogramming
-chapters in [*Advanced R*](https://adv-r.hadley.nz).
+> If you'd like to learn more about the underlying theory, or precisely
+> how it's different from non-standard evaluation, we recommend that you
+> read the Metaprogramming chapters in [*Advanced
+> R*](https://adv-r.hadley.nz).
 
 ### Setup for today
 
@@ -57,9 +62,8 @@ library(tidyverse)
 
 ### Reminder: Functions in R
 
-And then remind ourselves, what a function looks like in R!
-
-In R, we define and name a function via:
+And then remind ourselves, what a function looks like in R! In R, we
+define and name a function via:
 `variable <- function(…arguments…) { …body… }`
 
 For example we can define a function named `add` that adds two numbers
@@ -80,7 +84,9 @@ add(5, 10)
 
 This was a simple function, and seems a bit unneeded. Which it is! What
 would a function look like that we might need in our data analysis?
-Perhaps something like this:
+Perhaps something like this, which groups a data frame by a
+user-specified column and then calculates the mean for each group of
+another user-specified column:
 
 ```{r}
 group_means <- function(data, grouping_column, column_to_summarize) {
@@ -90,7 +96,7 @@ group_means <- function(data, grouping_column, column_to_summarize) {
 }
 ```
 
-Would that function work? Could we use it to get the mean height for the 
+Would that function work? Could we use it to get the mean height for the
 different species in the `starwars` data frame?
 
 ```{r}
@@ -104,13 +110,15 @@ starwars %>%
   group_by(species) %>% 
   summarise(column_mean = mean(height))
 ```
+
 Next we'll try our function:
+
 ```{r, error=TRUE}
 group_means(starwars, species, height)
 ```
 
-It turns out no! Why not? The unquoted column names 
-trip R up here! Let's learn more about why, and then what we can do to handle 
+It turns out this won't work! Why not? The unquoted column names trip R
+up here! Let's learn more about why, and then what we can do to handle
 this!
 
 ## Data masking
@@ -119,7 +127,6 @@ Data masking makes data manipulation faster because it requires less
 typing. In most (but not all) base R functions you need to refer to
 variables with `$`, leading to code that repeats the name of the data
 frame many times:
-
 
 ```{r, results = FALSE}
 starwars[starwars$homeworld == "Naboo" & starwars$species == "Human", ]
@@ -164,11 +171,7 @@ intuitive since many newer R users will attempt to write
 
 Unfortunately, this benefit does not come for free. When you start to
 program with these tools, you're going to have to grapple with the
-distinction. This will be hard because you've never had to think about
-it before, so it'll take a while for your brain to learn these new
-concepts and categories. However, once you've teased apart the idea of
-"variable" into data-variable and env-variable, I think you'll find it
-fairly straightforward to use.
+distinction!
 
 ### Indirection
 
@@ -178,7 +181,7 @@ the data-variable from an env-variable instead of directly typing the
 data-variable's name. There are two main cases:
 
 -   When you have the data-variable in a function argument (i.e. an
-    env-variable that holds a promise[^2]), you need to **embrace** the
+    env-variable that holds a promise[^1]), you need to **embrace** the
     argument by surrounding it in doubled braces, like
     `filter(df, {{ var }})`.
 
@@ -187,14 +190,21 @@ data-variable's name. There are two main cases:
     variable, as well as the number of observations that were
     summarised:
 
-```{r, results = FALSE}
-var_summary <- function(data, var) {
-  data %>%
-    summarise(n = n(), min = min({{ var }}), max = max({{ var }}))
+[^1]: In R, arguments are lazily evaluated which means that until you
+    attempt to use, they don't hold a value, just a **promise** that
+    describes how to compute the value. You can learn more at
+    <https://adv-r.hadley.nz/functions.html#lazy-evaluation>
+
+```{r}
+group_means <- function(data, grouping_column, column_to_summarize) {
+  data %>% 
+    group_by({{ grouping_column }}) %>% 
+    summarise(column_mean = mean({{ column_to_summarize }}))
 }
-mtcars %>% 
-  group_by(cyl) %>% 
-  var_summary(mpg)
+```
+
+```{r}
+group_means(starwars, species, height)
 ```
 
 -   When you have an env-variable that is a character vector, you need
@@ -204,39 +214,22 @@ mtcars %>%
     The following example uses `.data` to count the number of unique
     values in each variable of `mtcars`:
 
-    ```{r, results = FALSE}
-    for (var in names(mtcars)) {
-      mtcars %>% count(.data[[var]]) %>% print()
+    ```{r}
+    group_means <- function(data, grouping_column, column_to_summarize) {
+      data %>% 
+        group_by(.data[[grouping_column]]) %>% 
+        summarise(column_mean = mean(.data[[column_to_summarize]]))
     }
+    ```
+
+    ```{r}
+    group_means(starwars, "species", "height")
     ```
 
     Note that `.data` is not a data frame; it's a special construct, a
     pronoun, that allows you to access the current variables either
     directly, with `.data$x` or indirectly with `.data[[var]]`. Don't
     expect other functions to work with it.
-
-[^2]: In R, arguments are lazily evaluated which means that until you
-    attempt to use, they don't hold a value, just a **promise** that
-    describes how to compute the value. You can learn more at
-    <https://adv-r.hadley.nz/functions.html#lazy-evaluation>
-
-### Solving our problem from the beginning
-
-Can we use what we learned now to fix our function from earlier? Yes! We need to
-add the `{{` operator around the unquoted column name data variables in our 
-function:
-
-```{r}
-group_means <- function(data, grouping_column, column_to_summarize) {
-  data %>% 
-    group_by({{ grouping_column }}) %>% 
-    summarise(column_mean = mean({{ column_to_summarize}}))
-}
-```
-
-```{r, error=TRUE}
-group_means(starwars, species, height)
-```
 
 ## Tidy selection
 
@@ -276,16 +269,19 @@ are two forms of indirection:
     function argument, you use the same technique as data masking: you
     **embrace** the argument by surrounding it in doubled braces.
 
-    The following function summarises a data frame by computing the mean
-    of all variables selected by the user:
+    The following function subsets a data frame using numerical row
+    indexing and numbers or names for column indexing:
 
     ```{r, results = FALSE}
-    summarise_mean <- function(data, vars) {
-      data %>% summarise(n = n(), across({{ vars }}, mean))
+    rectangle <- function(data, columns, row_start, row_end) {
+      data %>% 
+        select({{ columns }}) %>% 
+        slice(row_start:row_end)
     }
-    mtcars %>% 
-      group_by(cyl) %>% 
-      summarise_mean(where(is.numeric))
+    ```
+
+    ```{r}
+    rectangle(starwars, height:eye_color, 1, 5)
     ```
 
 -   When you have an env-variable that is a character vector, you need
@@ -301,3 +297,71 @@ are two forms of indirection:
     mtcars %>% select(all_of(vars))
     mtcars %>% select(!all_of(vars))
     ```
+
+## The Walrus operator
+
+`:=` is named the "Walrus operator" and is needed in some cases when
+assigning values with tidyevaluation. For example, what if we wanted to
+take our `group_means` function from earlier and improved it so that the
+column name in the summarized data frame was the same column name as in
+the original data frame?
+
+We might then try something like this:
+
+```{r, error=TRUE}
+group_means <- function(data, grouping_column, column_to_summarize) {
+  data %>% 
+    group_by({{ grouping_column }}) %>% 
+    summarise({{ column_to_summarize }} = mean({{ column_to_summarize }}))
+}
+```
+
+But it looks like we cannot even define that function! Anytime we want
+to use indirection with a column name during assignment, we need to use
+the `:=` to make tidyevaluation work correctly:
+
+```{r}
+group_means <- function(data, grouping_column, column_to_summarize) {
+  data %>% 
+    group_by({{ grouping_column }}) %>% 
+    summarise({{ column_to_summarize }} := mean({{ column_to_summarize }}))
+}
+```
+
+Now we can define, and use our function!
+
+```{r}
+group_means(starwars, species, height)
+```
+
+We can even go further and combine our indirected column name with a
+string to improve the column name further:
+
+```{r}
+group_means <- function(data, grouping_column, column_to_summarize) {
+  data %>% 
+    group_by({{ grouping_column }}) %>% 
+    summarise("mean_{{ column_to_summarize }}" := mean({{ column_to_summarize }}))
+}
+```
+
+```{r}
+group_means(starwars, species, height)
+```
+
+## Using tidyevaluation in other {tidyverse} package functions
+
+Finally, we can apply this same logic to other {tidyverse} package
+functions (so far we have just focused on {dplyr}), such as {ggplot2}
+functions!
+
+```{r}
+scatter_plot <- function(data_frame, x_axis, y_axis) {
+  ggplot(data_frame, aes(y = {{ y_axis }}, x = {{ x_axis }})) +
+    geom_point(alpha = 0.5)
+}
+```
+
+```{r}
+scatter_plot(starwars, height, mass)
+```
