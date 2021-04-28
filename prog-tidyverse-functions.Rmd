@@ -28,8 +28,9 @@ Data masking and tidy selection make interactive data exploration fast and fluid
 
 This vignette will give you the minimum knowledge you need to be an effective programmer with tidy evaluation. If you'd like to learn more about the underlying theory, or precisely how it's different from non-standard evaluation, we recommend that you read the Metaprogramming chapters in [_Advanced R_](https://adv-r.hadley.nz).
 
-```{r setup, message = FALSE}
-library(dplyr)
+Before we get started, let's load the tidyverse packages:
+```{r load tidyverse, message = FALSE}
+library(tidyverse)
 ```
 
 ## Data masking

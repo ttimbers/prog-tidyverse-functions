@@ -18,6 +18,8 @@ For help see:
 
 ## During the workshop
 
-We will talk through this RMarkdown document: [prog-tidyverse-functions.Rmd](prog-tidyverse-functions.Rmd)
+We will talk and walk through [this RMarkdown document](prog-tidyverse-functions.html) (see source here: [prog-tidyverse-functions.Rmd](prog-tidyverse-functions.Rmd)).
 
-And if you want more practice after, try this worksheet out later: [prog-tidyverse-worksheet.Rmd](prog-tidyverse-worksheet.Rmd)
+And if you want more practice after, try this worksheet out: [worksheet/prog-tidyverse-worksheet.Rmd](worksheet/prog-tidyverse-worksheet.Rmd)
+
+**To easily download this GitHub repository as a `.zip`, click [here](https://github.com/ttimbers/prog-tidyverse-functions/archive/refs/heads/main.zip).**
