@@ -18,7 +18,7 @@ For help see:
 
 ## During the workshop
 
-We will talk and walk through [this RMarkdown document](prog-tidyverse-functions.html) (see source here: [prog-tidyverse-functions.Rmd](prog-tidyverse-functions.Rmd)).
+We will talk and walk through [this RMarkdown document](prog-tidyverse-functions.md) (see source here: [prog-tidyverse-functions.Rmd](prog-tidyverse-functions.Rmd)).
 
 ## After the workshop
 And if you want more practice after, try this worksheet out: [worksheet/prog-tidyverse-worksheet.Rmd](worksheet/prog-tidyverse-worksheet.Rmd)
