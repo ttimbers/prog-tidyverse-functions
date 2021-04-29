@@ -25,4 +25,4 @@ And if you want more practice after, try this worksheet out: [worksheet/prog-tid
 
 ## Get the materials locally
 
-**To easily download this GitHub repository as a `.zip`, click [here](https://github.com/ttimbers/prog-tidyverse-functions/archive/refs/heads/main.zip), or use Git to clone this repository.*
+*To easily download this GitHub repository as a `.zip`, click [here](https://github.com/ttimbers/prog-tidyverse-functions/archive/refs/heads/main.zip), or use Git to clone this repository.*
