@@ -292,10 +292,17 @@ are two forms of indirection:
     found in a character vector; then `!` plus `all_of()` to select all
     of the variables *not* found in a character vector:
 
-    ```{r, results = FALSE}
-    vars <- c("mpg", "vs")
-    mtcars %>% select(all_of(vars))
-    mtcars %>% select(!all_of(vars))
+    ```{r}
+    rectangle <- function(data, columns, row_start, row_end) {
+          data %>% 
+            select(all_of(columns)) %>% 
+            slice(row_start:row_end)
+        }
+    ```
+    
+    ```{r}
+    vars <- c("height", "mass")
+    rectangle(starwars, vars, 1, 5)
     ```
 
 ## The Walrus operator

@@ -524,7 +524,7 @@ summary {
 <p>To make those definitions a little more concrete, take this piece of code:</p>
 <pre class="r"><code>df &lt;- data.frame(x = runif(3), y = runif(3))
 df$x</code></pre>
-<pre><code>## [1] 0.41020894 0.57892337 0.02059509</code></pre>
+<pre><code>## [1] 0.4311037 0.9209893 0.5733951</code></pre>
 <p>It creates a env-variable, <code>df</code>, that contains two data-variables, <code>x</code> and <code>y</code>. Then it extracts the data-variable <code>x</code> out of the env-variable <code>df</code> using <code>$</code>.</p>
 <p>I think this blurring of the meaning of “variable” is a really nice feature for interactive data analysis because it allows you to refer to data-vars as is, without any prefix. And this seems to be fairly intuitive since many newer R users will attempt to write <code>diamonds[x == 0 | y == 0, ]</code>.</p>
 <p>Unfortunately, this benefit does not come for free. When you start to program with these tools, you’re going to have to grapple with the distinction!</p>
@@ -621,9 +621,21 @@ df$x</code></pre>
 ## 5    150    49 brown      light       brown</code></pre></li>
 <li><p>When you have an env-variable that is a character vector, you need to use <code>all_of()</code> or <code>any_of()</code> depending on whether you want the function to error if a variable is not found.</p>
 <p>The following code uses <code>all_of()</code> to select all of the variables found in a character vector; then <code>!</code> plus <code>all_of()</code> to select all of the variables <em>not</em> found in a character vector:</p>
-<pre class="r"><code>vars &lt;- c(&quot;mpg&quot;, &quot;vs&quot;)
-mtcars %&gt;% select(all_of(vars))
-mtcars %&gt;% select(!all_of(vars))</code></pre></li>
+<pre class="r"><code>rectangle &lt;- function(data, columns, row_start, row_end) {
+      data %&gt;% 
+        select(all_of(columns)) %&gt;% 
+        slice(row_start:row_end)
+    }</code></pre>
+<pre class="r"><code>vars &lt;- c(&quot;height&quot;, &quot;mass&quot;)
+rectangle(starwars, vars, 1, 5)</code></pre>
+<pre><code>## # A tibble: 5 x 2
+##   height  mass
+##    &lt;int&gt; &lt;dbl&gt;
+## 1    172    77
+## 2    167    75
+## 3     96    32
+## 4    202   136
+## 5    150    49</code></pre></li>
 </ul>
 </div>
 </div>
