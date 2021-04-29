@@ -432,18 +432,14 @@ summary {
 <blockquote>
 <p><strong>Attribution:</strong> Derived from the <a href="https://dplyr.tidyverse.org/articles/programming.html">Programming with {dplyr} vignette</a> by Hadley Wickham, Romain François, Lionel Henry, Kirill Müller, and RStudio.</p>
 </blockquote>
-<p>Most <del>dplyr</del> {tidyverse} verbs use <strong>tidy evaluation</strong> in some way. Tidy evaluation is a special type of non-standard evaluation used throughout the {tidyverse}. There are two basic forms:</p>
+<p>Most {tidyverse} verbs use <strong>tidy evaluation</strong> in some way. Tidy evaluation is a special type of non-standard evaluation used throughout the {tidyverse}. There are two basic forms:</p>
 <ul>
 <li><p><code>arrange()</code>, <code>count()</code>, <code>filter()</code>, <code>group_by()</code>, <code>mutate()</code>, and <code>summarise()</code> use <strong>data masking</strong> so that you can use data variables as if they were variables in the environment (i.e. you write <code>my_variable</code> not <code>df$myvariable</code>).</p></li>
 <li><p><code>across()</code>, <code>relocate()</code>, <code>rename()</code>, <code>select()</code>, and <code>pull()</code> use <strong>tidy selection</strong> so you can easily choose variables based on their position, name, or type (e.g. <code>starts_with(&quot;x&quot;)</code> or <code>is.numeric</code>).</p></li>
 </ul>
 <p>To determine whether a function argument uses data masking or tidy selection, look at the documentation: in the arguments list, you’ll see <code>&lt;data-masking&gt;</code> or <code>&lt;tidy-select&gt;</code>. Let’s look at a few now!</p>
-<pre class="r"><code>?arrange</code></pre>
-<pre><code>## No documentation for &#39;arrange&#39; in specified packages and libraries:
-## you could try &#39;??arrange&#39;</code></pre>
-<pre class="r"><code>?rename</code></pre>
-<pre><code>## No documentation for &#39;rename&#39; in specified packages and libraries:
-## you could try &#39;??rename&#39;</code></pre>
+<pre class="r"><code>?dplyr::arrange</code></pre>
+<pre class="r"><code>?dplyr::rename</code></pre>
 <p>Data masking and tidy selection make interactive data exploration fast and fluid, but they add some new challenges when you attempt to use them indirectly such as in a for loop or a function. This talk will show you how to overcome those challenges.</p>
 <blockquote>
 <p>If you’d like to learn more about the underlying theory, or precisely how it’s different from non-standard evaluation, we recommend that you read the Metaprogramming chapters in <a href="https://adv-r.hadley.nz"><em>Advanced R</em></a>.</p>
@@ -528,7 +524,7 @@ summary {
 <p>To make those definitions a little more concrete, take this piece of code:</p>
 <pre class="r"><code>df &lt;- data.frame(x = runif(3), y = runif(3))
 df$x</code></pre>
-<pre><code>## [1] 0.5780782 0.7868548 0.6454876</code></pre>
+<pre><code>## [1] 0.41020894 0.57892337 0.02059509</code></pre>
 <p>It creates a env-variable, <code>df</code>, that contains two data-variables, <code>x</code> and <code>y</code>. Then it extracts the data-variable <code>x</code> out of the env-variable <code>df</code> using <code>$</code>.</p>
 <p>I think this blurring of the meaning of “variable” is a really nice feature for interactive data analysis because it allows you to refer to data-vars as is, without any prefix. And this seems to be fairly intuitive since many newer R users will attempt to write <code>diamonds[x == 0 | y == 0, ]</code>.</p>
 <p>Unfortunately, this benefit does not come for free. When you start to program with these tools, you’re going to have to grapple with the distinction!</p>
@@ -633,7 +629,7 @@ mtcars %&gt;% select(!all_of(vars))</code></pre></li>
 </div>
 <div id="the-walrus-operator" class="section level2">
 <h2>The Walrus operator</h2>
-<p><code>:=</code> is named the “Walrus operator” and is needed in some cases when assigning values with tidyevaluation. For example, what if we wanted to take our <code>group_means</code> function from earlier and improved it so that the column name in the summarized data frame was the same column name as in the original data frame?</p>
+<p><code>:=</code> is named the “Walrus operator” and is needed in some cases when assigning values with tidy evaluation. For example, what if we wanted to take our <code>group_means</code> function from earlier and improved it so that the column name in the summarized data frame was the same column name as in the original data frame?</p>
 <p>We might then try something like this:</p>
 <pre class="r"><code>group_means &lt;- function(data, grouping_column, column_to_summarize) {
   data %&gt;% 
@@ -644,7 +640,7 @@ mtcars %&gt;% select(!all_of(vars))</code></pre></li>
 ## 3:     group_by({{ grouping_column }}) %&gt;% 
 ## 4:     summarise({{ column_to_summarize }} =
 ##                                            ^</code></pre>
-<p>But it looks like we cannot even define that function! Anytime we want to use indirection with a column name during assignment, we need to use the <code>:=</code> to make tidyevaluation work correctly:</p>
+<p>But it looks like we cannot even define that function! Anytime we want to use indirection with a column name during assignment, we need to use the <code>:=</code> to make tidy evaluation work correctly:</p>
 <pre class="r"><code>group_means &lt;- function(data, grouping_column, column_to_summarize) {
   data %&gt;% 
     group_by({{ grouping_column }}) %&gt;% 
@@ -690,8 +686,8 @@ mtcars %&gt;% select(!all_of(vars))</code></pre></li>
 ## 10 Gungan           209.
 ## # … with 28 more rows</code></pre>
 </div>
-<div id="using-tidyevaluation-in-other-tidyverse-package-functions" class="section level2">
-<h2>Using tidyevaluation in other {tidyverse} package functions</h2>
+<div id="using-tidy-evaluation-in-other-tidyverse-package-functions" class="section level2">
+<h2>Using tidy evaluation in other {tidyverse} package functions</h2>
 <p>Finally, we can apply this same logic to other {tidyverse} package functions (so far we have just focused on {dplyr}), such as {ggplot2} functions!</p>
 <pre class="r"><code>scatter_plot &lt;- function(data_frame, x_axis, y_axis) {
   ggplot(data_frame, aes(y = {{ y_axis }}, x = {{ x_axis }})) +
