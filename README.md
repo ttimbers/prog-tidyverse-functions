@@ -26,3 +26,9 @@ And if you want more practice after, try this worksheet out: [worksheet/prog-tid
 ## Get the materials locally
 
 *To easily download this GitHub repository as a `.zip`, click [here](https://github.com/ttimbers/prog-tidyverse-functions/archive/refs/heads/main.zip), or use Git to clone this repository.*
+
+## License
+Attribution 4.0 International (CC BY 4.0).
+
+## Atrribution 
+Derived from the [Programming with {dplyr} vignette](https://dplyr.tidyverse.org/articles/programming.html) by Hadley Wickham, Romain François, Lionel Henry, Kirill Müller, and RStudio.
